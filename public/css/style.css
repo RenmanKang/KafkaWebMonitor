@@ -13,6 +13,7 @@ a {
 #tree { position:fixed; top:56px; left:5px; width:300px; border-right:1px solid #ddd; z-index:1; }
 #kafkaTree { height:600px; overflow:scroll; }
 #content { position:relative; left:280px; min-width:520px; width:75%; height:580px; margin-top:14px; margin-left:16px; }
+#content table thead th { padding: 8px }
 .content-title { font-weight: 500; font-size: 20px; padding: 10px; margin-bottom: 16px; overflow:hidden; }
 #content-refresh-btn { float: right; position: relative; top: -2px; }
 ._center { text-align: center; }

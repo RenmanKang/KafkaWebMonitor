@@ -8,10 +8,12 @@
 	<link rel="stylesheet" href="/lib/bootstrap-table/bootstrap-table.min.css" />
 	<link rel="stylesheet" href="/css/style.css" />
 	<style>
-		.content { background-color:#fff;margin: 20px; text-align: center; width: 90%; }
+		.content { background-color:#fff;margin: 20px; width: 90%; }
 		.title { font-weight: 500; font-size: 20px; padding: 10px; margin-bottom: 26px; }
 		.hosts { width:50%; }
 		.chroot { width:20% }
+		#zk-hosts .input-group-btn { display: inline; }
+
 	</style>
 </head>
 <body>
@@ -24,26 +26,57 @@
 </div>
 <div>
 	<div class= "content sec-index" style="">
-		<div class="title"><%= __('Add Zookeeper Connection') %></div>
+		<div class="title"><%= __('Zookeeper List') %></div>
 		<div id="alert-div"></div>
-		<form id="add-form" class="form-inline">
-			<div class="input-group hosts">
-				<input type="text" class="form-control" id="hosts" name="hosts" value="<%= (zkConf && zkConf.hosts) %>" placeholder="<%= __('Zookeeper connection string') %>" />
-			</div>
-			<div class="input-group chroot">
-				<input type="text" class="form-control" id="chroot" name="chroot" value="<%= (zkConf && zkConf.chroot) %>" placeholder="<%= __('Chroot string(optional)') %>" />
-			</div>
-			<div class="input-group">
-				<button type="button" class="btn btn-info" id="add-btn" title="<%= __('Add') %>">
-					<%= __('Add') %>
-				</button>
-				<% if(zkConf) { %>
-					<button type="button" class="btn btn-warning" id="cancel-btn" title="<%= __('Cancel') %>">
-						<%= __('Cancel') %>
-					</button>
+		<div>
+			<table class="table" id="zk-hosts" data-toggle="table" data-cache="false">
+				<colgroup>
+					<col />
+					<col width="30%" />
+					<col width="150px;" />
+				</colgroup>
+				<thead>
+					<tr class="info">
+						<th data-valign="middle"><%= __('zk hosts') %></th>
+						<th data-valign="middle"><%= __('chroot') %></th>
+						<th data-valign="middle" data-align="center"><%= __('Action') %></th>
+					</tr>
+				</thead>
+				<tbody>
+				<% for(var i = 0; zkHosts && i < zkHosts.length; i++) { %>
+				<tr id="<%= zkHosts[i].id %>">
+					<td class="host-td"><a href="/?id=<%= zkHosts[i].id %>"><%= zkHosts[i].hosts %></a></td>
+					<td class="chroot-td"><%= zkHosts[i].chroot %></td>
+					<td>
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-warning btn-sm btn-edit" data-id="<%= zkHosts[i].id %>" title="<%= __('Edit') %>">
+								<i class="glyphicon glyphicon-edit"></i>
+							</button>
+						</span>
+						<span class="input-group-btn">
+							<button type="button" class="btn btn-danger btn-sm btn-del" data-id="<%= zkHosts[i].id %>" title="<%= __('Delete') %>">
+								<i class="glyphicon glyphicon-trash"></i>
+							</button>
+						</span>
+					</td>
+				</tr>
 				<% } %>
-			</div>
-		</form>
+				<tr>
+					<td>
+						<input type="text" class="form-control input-sm" id="hosts" name="hosts" placeholder="<%= __('Zookeeper connection string') %>" />
+					</td>
+					<td>
+						<input type="text" class="form-control input-sm" id="chroot" name="chroot" placeholder="<%= __('Chroot string(optional)') %>" />
+					</td>
+					<td>
+						<button type="button" class="btn btn-info btn-sm add-btn" id="add-btn" title="<%= __('Add') %>">
+							<i class="glyphicon glyphicon-send"></i> <%= __('Add') %>
+						</button>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
 	</div>
 </div>
 <% include ./modals %>
@@ -52,37 +85,21 @@
 <script type="text/javascript" src="/lib/bootstrap-table/bootstrap-table.min.js"></script>
 <script type="text/javascript" src="/lib/moment/moment.js"></script>
 <script type="text/javascript" src="/js/script.js"></script>
+<script type="text/javascript" src="/js/zkhosts.js"></script>
 <script>
-	$('#add-btn').on('click', function() {
-		var hosts = $('#hosts').val();
-		if(isEmpty(hosts)) {
-			BSAlert('danger', "<%= __('Zookeeper connection string input required') %>", '#alert-div', true);
-			return;
-		}
-		$.ajax({
-			type: 'post',
-			url: '/zkHosts',
-			dataType: 'json',
-			data: $('#add-form').serialize(),
-			success: function(result) {
-				if(result.status === 200) {
-					location.href = '/';
-				} else {
-					BSAlert('danger', result.message, '#alert-div', true);
-				}
-			},
-			error: function(err) {
-				console.log(err);
-				BSAlert('danger', err, '#alert-div', true);
-			}
-		});
-	});
-
-	$('#cancel-btn').on('click', function() {
-		location.href = '/';
-	});
-
 	$(function() {
+		$('#add-btn').on('click', function() {
+			setAddBtnEvent();
+		});
+
+		$('.btn-edit').on('click', function(e) {
+			setEditBtnEvent(this);
+		});
+
+		$('.btn-del').on('click', function(e) {
+			setDelBtnEvent(this);
+		});
+
 		$('#hosts').focus();
 	});
 </script>

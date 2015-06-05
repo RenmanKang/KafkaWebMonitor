@@ -1,13 +1,16 @@
 {
   "title" : "Kafka Web Monitor",
   "Add" : "등록",
+  "Edit" : "수정",
+  "Delete" : "삭제",
   "Cancel" : "취소",
   "Search" : "검색",
   "Refresh" : "새로고침",
   "Close" : "닫기",
+  "Alert" : "알림",
   "Name" : "Name",
   "Value" : "Value",
-  "Alert" : "알림",
+
   "sec" : "초",
   "Log Size" : "로그 크기",
   "Offset" : "Offset",
@@ -17,9 +20,12 @@
   "Log Increment" : "로그 증가량",
   "Offset Increment" : "Offset 증가량",
 
-  "Add Zookeeper Connection" : "Zookeeper 서버 등록",
+  "Zookeeper List" : "Zookeeper 목록",
+  "zk hosts" : "Zookeeper 서버",
+  "chroot" : "Kafka Root Path",
+  "Action" : "작업",
   "Zookeeper connection string" : "Zookeeper 서버",
-  "Chroot string(optional)" : "Chroot(선택사항)",
+  "Chroot string(optional)" : "Root Path(선택사항)",
   "Zookeeper connection string input required" : "Zookeeper 서버를 입력하세요.",
   "Change zookeeper connection" : "Zookeeper 설정 변경"
 }

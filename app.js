@@ -6,8 +6,11 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var routes = require('./conf/routes');
 var conf = require('./conf/config');
-var i18n_config = require('./lib/i18n_config');
+var i18nConfig = require('./lib/i18n-config');
+var zk_hosts = require('./lib/zk-hosts');
+var kafka = require('./lib/kafka');
 var logger = require('./lib/logger').accessLogger;
 
 var app = express();
@@ -22,7 +25,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(i18n.init);
-app.use(i18n_config.init);
+app.use(i18nConfig.init);
 
 var maxAge = (conf.session && conf.session.max_age) || (1000 * 60 * 60 * 24);
 
@@ -51,8 +54,37 @@ app.use(function(req, res, next) {
 });
 app.use(express.static(path.join(__dirname, 'public'), maxAge));
 
+var kafkaClient;
+
+var middleware = function(req, res, next) {
+	var id = req.query.id;
+	id && console.log('id:'+id);
+	try {
+		if(kafkaClient) {
+			if(id && zk_hosts.getZkHostsById(id) && id != kafkaClient.getId()) {
+				console.log('Change kafka client '+kafkaClient.getId()+' to '+id);
+				kafkaClient.close();
+				kafkaClient = new kafka.KafkaClient(id);
+			}
+		} else {
+			kafkaClient = new kafka.KafkaClient(id);
+		}
+		req.kafkaClient = kafkaClient;
+	} catch(err) {
+		zk_hosts.loadZkHostsList();
+		throw err;
+	}
+	next();
+};
+
 // Init routes
-require('./dispatch').dispatch(app);
+var route, cfg;
+for(var i = 0; i < routes.length; ++i) {
+	cfg = routes[i];
+	route = require(cfg.path);
+	// use configed method
+	app[cfg.method](cfg.url, middleware, route[cfg.fn]);
+}
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

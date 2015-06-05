@@ -1,7 +1,8 @@
 var async = require('async');
 var _ = require('underscore');
+var node_uuid = require('node-uuid');
+var zk_hosts = require('../lib/zk-hosts');
 var kafka = require('../lib/kafka');//require('kafka-node');
-var zk = require('../lib/zk');
 var utils = require('../lib/utils');
 var conf = require('../conf/config');
 var logger = require('../lib/logger').appLogger;
@@ -68,52 +69,80 @@ var CONSUMER_CACHE = {
 	consumers: null
 };
 
-exports.index = function(req, res) {
-	var zkHosts = zk.getZkHosts();
-	if(zkHosts) {
-		res.render('index', {
-			layout: false,
-			zkhosts: zkHosts
-		});
-	} else {
-		res.render('zkhosts', {
-			layout: false,
-			zkConf: null
-		});
-	}
-};
+var kafkaClient;
 
-exports.getZkHosts = function(req, res) {
-	var zkConf = zk.getZkHostsConf();
-	res.render('zkhosts', {
+exports.index = function(req, res) {
+	kafkaClient = req.kafkaClient;
+	var zkHosts = zk_hosts.getZkHostsList();
+	var page = (zkHosts && zkHosts.length) ? 'index' : 'zkhosts';
+	res.render(page, {
 		layout: false,
-		zkConf: zkConf
+		zkHosts: zkHosts,
+		currId: kafkaClient.getId()
 	});
 };
 
-exports.addZkHost = function(req, res) {
+exports.getZkHosts = function(req, res) {
+	kafkaClient = req.kafkaClient;
+	var zkHosts = zk_hosts.getZkHostsList();
+	res.render('zkhosts', {
+		layout: false,
+		zkHosts: zkHosts
+	});
+};
+
+exports.addZkHosts = function(req, res) {
+	kafkaClient = req.kafkaClient;
 	var hosts = req.body.hosts;
 	var chroot = req.body.chroot;
 	if(!hosts) {
-		res.json({status: 403, message: res__i('Zookeeper connection string input required')});
+		res.json({status: 403, message: res.__i('Zookeeper connection string input required')});
 		return;
 	}
 
-	var data = { hosts: hosts, chroot: chroot || '' };
-	async.waterfall([
-		function(cb) {
-			zk.saveZkHosts(data, cb);
-		},
-		function(cb) {
-			try {
-				zk.resetZkClient();
-				kafka.resetKafkaClient(zk.getZkHosts());
-				cb();
-			} catch(err) {
-				cb(err);
-			}
+	var uuid = node_uuid.v4();
+	var data = { id: uuid, hosts: hosts, chroot: chroot || '' };
+	zk_hosts.addZkHosts(data, function(err, zkHosts) {
+		if(err) {
+			logger.error(err);
+			res.json({ status: 500, message: utils.getErrMsg(err) });
+		} else {
+			res.json({ status: 200, message: 'OK', zkHosts: zkHosts });
 		}
-	], function(err) {
+	});
+};
+
+exports.updateZkHosts = function(req, res) {
+	kafkaClient = req.kafkaClient;
+	var id = req.params.id;
+	var hosts = req.body.hosts;
+	var chroot = req.body.chroot;
+	if(!hosts) {
+		res.json({status: 403, message: res.__i('Zookeeper connection string input required')});
+		return;
+	}
+
+	var data = { id: id, hosts: hosts, chroot: chroot || '' };
+	zk_hosts.updateZkHosts(data, function(err, zkHosts) {
+		if(err) {
+			logger.error(err);
+			res.json({ status: 500, message: utils.getErrMsg(err) });
+		} else {
+			res.json({ status: 200, message: 'OK', zkHosts: zkHosts });
+		}
+	});
+};
+
+exports.deleteZkHosts = function(req, res) {
+	kafkaClient = req.kafkaClient;
+	var id = req.params.id;
+	var zkHosts = zk_hosts.getZkHostsById(id);
+	if(!zkHosts) {
+		res.json({status: 404, message: res.__i('Zookeeper connection string not found')});
+		return;
+	}
+
+	zk_hosts.deleteZkHosts(id, function(err) {
 		if(err) {
 			logger.error(err);
 			res.json({ status: 500, message: utils.getErrMsg(err) });
@@ -130,6 +159,7 @@ exports.addZkHost = function(req, res) {
  * @param res
  */
 exports.getKafkaTrees = function(req, res) {
+	kafkaClient = req.kafkaClient;
 	async.parallel({
 		brokers : function(cb) {
 			getBrokers(function(err, brokers) {
@@ -199,6 +229,7 @@ exports.getKafkaTrees = function(req, res) {
  * @param res
  */
 exports.getContent = function(req, res) {
+	kafkaClient = req.kafkaClient;
 	var node = req.query.node;
 	var tmp = node.split(':');
 	var type = tmp[0];
@@ -273,7 +304,7 @@ function parseJsonData(data) {
 }
 
 var BrokerInfo = function(id, cb) {
-	zk.zkClient.nodeInfo(NODE_PATH.broker+'/'+id, function(rc, err, stat, data) {
+	kafkaClient.nodeInfo(NODE_PATH.broker+'/'+id, function(rc, err, stat, data) {
 		var bInfo = parseJsonData(data);
 		if(rc === 0) {
 			cb(null, { id: id, stat: stat, data: bInfo });
@@ -287,7 +318,7 @@ var BrokerInfo = function(id, cb) {
 function getBrokers(cb) {
 	var now = new Date().getTime();
 	if(!BROKER_CACHE.brokers || BROKER_CACHE.expires < now) {
-		zk.zkClient.nodeChildren(NODE_PATH.broker, function(rc, err, ids) {
+		kafkaClient.nodeChildren(NODE_PATH.broker, function(rc, err, ids) {
 			BROKER_CACHE.expires = now + REFRESH_INTERVAL;
 			if(rc === 0) {
 				async.map(ids, BrokerInfo, cb);
@@ -304,7 +335,7 @@ function getBrokers(cb) {
 function getTopics(cb) {
 	var now = new Date().getTime();
 	if(!TOPIC_CACHE.topics || TOPIC_CACHE.expires < now) {
-		zk.zkClient.nodeList(NODE_PATH.topic, function(err, topics) {
+		kafkaClient.nodeList(NODE_PATH.topic, function(err, topics) {
 			TOPIC_CACHE.expires = now + REFRESH_INTERVAL;
 			cb(err, topics);
 		});
@@ -316,7 +347,7 @@ function getTopics(cb) {
 function getConsumers(cb) {
 	var now = new Date().getTime();
 	if(!CONSUMER_CACHE.consumers || CONSUMER_CACHE.expires < now) {
-		zk.zkClient.nodeList(NODE_PATH.consumer, function(err, topics) {
+		kafkaClient.nodeList(NODE_PATH.consumer, function(err, topics) {
 			CONSUMER_CACHE.expires = now + REFRESH_INTERVAL;
 			cb(err, topics);
 		});
@@ -354,7 +385,7 @@ function getBrokerList(cb) {
 			});
 		},
 		function(cb) {
-			kafka.topicMetadata(topics, cb);
+			kafkaClient.topicMetadata(topics, cb);
 		},
 		function(data, cb) {
 			if(data && data.length > 1) {
@@ -414,7 +445,7 @@ function getTopicList(topics, cb) {
 		}
 	]
 	 */
-	kafka.topicMetadata(topics, function(err, data) {
+	kafkaClient.topicMetadata(topics, function(err, data) {
 		var list = [];
 		if(data && data.length > 1) {
 			var metadata = data[1].metadata;
@@ -436,7 +467,7 @@ function getTopicList(topics, cb) {
 				list.push(t_info);
 			}
 
-			async.map(list, kafka.setLogSize, function(err, resp) {
+			async.map(list, kafkaClient.setLogSize, function(err, resp) {
 				if(err) {
 					logger.error('Log size fetch result error;', err);
 				}
@@ -459,7 +490,7 @@ function getConsumerList(consumers, cb) {
 	var list = []; // [ { consumer: '', topics: [ { topic: '', offset: 0, partitions: [ partition: 0, offset: 0 ] } ] } ]
 	async.each(consumers, function(consumer, cbb) {
 		var path = '/consumers/'+consumer+'/offsets';
-		zk.zkClient.nodeList(path, function(err, topics) {
+		kafkaClient.nodeList(path, function(err, topics) {
 			if(!err) {
 				setTopicOffset(consumer, topics, function(err, c_info) {
 					list.push(c_info);
@@ -483,7 +514,7 @@ function setTopicOffset(consumer, topics, cb) {
 	var c_info = { consumer: consumer, topics: [] };
 	async.each(topics, function(topic, cbb) {
 		var t_path = path+'/'+topic;
-		zk.zkClient.nodeList(t_path, function(err, parts) {
+		kafkaClient.nodeList(t_path, function(err, parts) {
 			if(!err) {
 				setPartitionOffset(t_path, topic, parts, function(err, t_info) {
 					c_info.topics.push(t_info);
@@ -505,7 +536,7 @@ function setPartitionOffset(t_path, topic, parts, cb) {
 	var t_info = { topic: topic, offset: 0, partitions: [] };
 	async.each(parts, function(part, cbb) {
 		var p_path = t_path + '/' + part;
-		zk.zkClient.nodeInfo(p_path, function (rc, err, stat, data) {
+		kafkaClient.nodeInfo(p_path, function (rc, err, stat, data) {
 			if(rc === 0) {
 				var offset = utils.getOffset(data);
 				var p_info = { partition: part, offset: offset };
@@ -517,7 +548,7 @@ function setPartitionOffset(t_path, topic, parts, cb) {
 				t_info.offset += offset;
 				cbb();
 			} else {
-				logger.error('zk.zkClient.nodeInfo error. path:'+p_path+', err:', err);
+				logger.error('kafkaClient.nodeInfo error. path:'+p_path+', err:', err);
 				cbb(err);
 			}
 		});
@@ -579,7 +610,7 @@ function getConsumerTopicList(consumer, cb) {
 	var path = '/consumers/'+consumer+'/offsets';
 	async.waterfall([
 		function(cb) {
-			zk.zkClient.nodeList(path, cb);
+			kafkaClient.nodeList(path, cb);
 		},
 		function(topics, cb) {
 			getTopicList(topics, cb);
@@ -606,7 +637,7 @@ function getConsumerTopicList(consumer, cb) {
 function getTopicPartitionInfo(consumer, t_info, part, cb) {
 	async.parallel({
 		offset: function(cb) {
-			zk.zkClient.nodeInfo('/consumers/'+consumer+'/offsets/'+part.topic+'/'+part.partition, function(rc, err, stat, data) {
+			kafkaClient.nodeInfo('/consumers/'+consumer+'/offsets/'+part.topic+'/'+part.partition, function(rc, err, stat, data) {
 				if(rc === 0) {
 					if(stat) {
 						part.ctime = stat.ctime;
@@ -627,13 +658,13 @@ function getTopicPartitionInfo(consumer, t_info, part, cb) {
 
 					cb();
 				} else {
-					logger.error('zk.zkClient.nodeInfo() error; ', err);
+					logger.error('kafkaClient.nodeInfo() error; ', err);
 					cb(err);
 				}
 			});
 		},
 		owner: function(cb) {
-			zk.zkClient.nodeInfo('/consumers/'+consumer+'/owners/'+part.topic+'/'+part.partition, function(rc, err, stat, data) {
+			kafkaClient.nodeInfo('/consumers/'+consumer+'/owners/'+part.topic+'/'+part.partition, function(rc, err, stat, data) {
 				if(rc === 0) {
 					part.owner = data ? data.toString() : '';
 				}

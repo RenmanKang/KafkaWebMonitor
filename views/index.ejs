@@ -6,6 +6,7 @@
 	<link rel="shortcut icon" href="/favicon.ico" />
 	<link rel="stylesheet" href="/lib/bootstrap-3.3.4/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="/lib/bootstrap-table/bootstrap-table.min.css" />
+	<link rel="stylesheet" href="/lib/bootstrap-select/css/bootstrap-select.min.css" />
 	<link rel="stylesheet" href="/lib/jstree/themes/proton/style.min.css" />
 	<link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -19,7 +20,18 @@
 </div>
 <div>
 	<div class="affix-top tree" id="tree" style="background-color:#fff;">
-		<div style="margin:6px;"><a href="/zkHosts" title="<%= __('Change zookeeper connection') %>"><%= zkhosts %></a></div>
+		<div class="input-group input-group-sm" style="margin: 0 4px 4px 0;">
+			<select class="selectpicker" id="hostid" name="hostid" data-style="btn-info" data-width="294">
+				<% for(var i = 0; i < zkHosts.length; i++) { %>
+				<option value="<%= zkHosts[i].id %>" <% if(zkHosts[i].id === currId) { %>selected<% } %>><%= zkHosts[i].connectionString %></option>
+				<% } %>
+			</select>
+			<span class="input-group-btn">
+				<button type="button" class="btn btn-info" id="show-btn" title="<%= __('Show zk list') %>">
+					<i class="glyphicon glyphicon-cog"></i>
+				</button>
+			</span>
+		</div>
 		<div style="margin-bottom:4px;">
 			<div class="input-group input-group-sm" style="margin:0 4px 0 0">
 				<input type="text" class="form-control" id="search-node" />
@@ -42,11 +54,11 @@
 		<div class="well content-title">
 			<span id="content-title"></span>
 			<button type="button" class="btn btn-info btn-xs" id="content-refresh-btn" data-state="refresh" title="<%= __('Refresh') %>">
-				<i class="glyphicon glyphicon-refresh"></i>
+				<i class="glyphicon glyphicon-repeat"></i>
 			</button>
 		</div>
 		<div id="alert-div"></div>
-		<table class="table" id="data-tb">
+		<table class="table" id="data-tb" data-toggle="table" data-cache="false">
 		</table>
 	</div>
 </div>
@@ -54,9 +66,21 @@
 <script type="text/javascript" src="/lib/jquery/jquery-2.1.3.min.js"></script>
 <script type="text/javascript" src="/lib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/lib/bootstrap-table/bootstrap-table.min.js"></script>
+<script type="text/javascript" src="/lib/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script type="text/javascript" src="/lib/moment/moment.js"></script>
 <script type="text/javascript" src="/lib/jstree/jstree.min.js"></script>
 <script type="text/javascript" src="/js/script.js"></script>
 <script type="text/javascript" src="/js/main.js"></script>
+<script>
+	$(function() {
+		$('#hostid').change(function() {
+			location.href = '/?id='+$('#hostid').val();
+		});
+
+		$('#show-btn').on('click', function() {
+			location.href = '/zkHosts'
+		});
+	});
+</script>
 </body>
 </html>

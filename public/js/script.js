@@ -29,7 +29,7 @@ function BSAlert(type, msg, target, keep) {
 		$(this).alert();
 	});
 	if(!keep) {
-		$("#bs-alert").delay(4000).slideUp(500, function() {
+		$("#bs-alert").delay(3000).slideUp(500, function() {
 			$(this).alert('close');
 		});
 	}

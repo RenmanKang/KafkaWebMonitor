@@ -1,7 +1,5 @@
 var async = require('async');
 var _ = require('underscore');
-var kafka = require('../lib/kafka');//require('kafka-node');
-var zk = require('../lib/zk');
 var utils = require('../lib/utils');
 var conf = require('../conf/config');
 var logger = require('../lib/logger').appLogger;
@@ -12,7 +10,10 @@ var socketClients = {
 	status: []
 };
 
+var kafkaClient;
+
 exports.showChart = function(req, res) {
+	kafkaClient = req.kafkaClient;
 	var interval = req.query.interval || conf.chart_tick_time || 5000;
 	if(interval < 1000) interval = 1000;
 	res.render('chart', {
@@ -74,7 +75,7 @@ function responseChart(socket, req, cb) {
 	var consumer = req.consumer;
 	async.waterfall([
 		function(cb) {
-			kafka.topicMetadata([ topic ], cb);
+			kafkaClient.topicMetadata([ topic ], cb);
 		},
 		function(data, cb) {
 			// t_info = { topic: topic, logSize: 0, offset: 0, lag: 0, partitions: [ { partition: 0, logSize: 0, lag: 0, leader: 0, borker: ''... } ] };
@@ -87,7 +88,7 @@ function responseChart(socket, req, cb) {
 					t_info.partitions.push(part[idx]);
 				});
 				// Set log size
-				kafka.setLogSize(t_info, cb);
+				kafkaClient.setLogSize(t_info, cb);
 			} else {
 				cb(null, t_info);
 			}
@@ -96,7 +97,7 @@ function responseChart(socket, req, cb) {
 			// t_info = { topic: topic, logSize: 0, offset: 0, lag: 0, partitions: [ { partition: 0, offset:0, logSize: 0, lag: 0, owner: '', ctime: '', mtime: '' } ] };
 			async.each(t_info.partitions, function(part, cbb) {
 				var path = '/consumers/'+consumer+'/offsets/'+part.topic+'/'+part.partition;
-				zk.zkClient.nodeInfo(path, function(rc, err, stat, data) {
+				kafkaClient.nodeInfo(path, function(rc, err, stat, data) {
 					if(rc === 0) {
 
 						var offset = utils.getOffset(data);
@@ -115,7 +116,7 @@ function responseChart(socket, req, cb) {
 
 						cbb();
 					} else {
-						logger.error('zk.zkClient.nodeInfo() error; ', err);
+						logger.error('kafkaClient.nodeInfo() error; ', err);
 						cbb(err);
 					}
 				});

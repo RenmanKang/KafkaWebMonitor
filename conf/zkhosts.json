@@ -1,0 +1,14 @@
+[
+	{
+		"id": "d765af80-d2aa-47e2-8971-c475cd5beeb2",
+		"hosts": "112.175.29.45:10013",
+		"chroot": "",
+		"connectionString": "112.175.29.45:10013"
+	},
+	{
+		"id": "728ccf05-484a-4717-8246-c6f5790f627a",
+		"hosts": "112.175.29.45:10013",
+		"chroot": "/NHN/NELO2/kafka",
+		"connectionString": "112.175.29.45:10013/NHN/NELO2/kafka"
+	}
+]

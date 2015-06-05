@@ -14,8 +14,20 @@ var routes = [
 	{
 		url: '/zkHosts',
 		path: './routes/index',
-		fn: 'addZkHost',
+		fn: 'addZkHosts',
 		method: 'post'
+	},
+	{
+		url: '/zkHosts/:id',
+		path: './routes/index',
+		fn: 'updateZkHosts',
+		method: 'put'
+	},
+	{
+		url: '/zkHosts/:id',
+		path: './routes/index',
+		fn: 'deleteZkHosts',
+		method: 'delete'
 	},
 	{
 		url: '/api/tree',

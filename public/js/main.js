@@ -120,7 +120,7 @@ function setBrokerList(result) {
 	tr.append('<th class="_center">ID</th>');
 	tr.append('<th>Host</th>');
 	tr.append('<th>Port</th>');
-	tr.append('<th class="_right">Topic Count</th>');
+	tr.append('<th class="_center">Topic Count</th>');
 	thead.append(tr);
 	$('#data-tb').append(thead);
 	var list = result.data;
@@ -133,7 +133,7 @@ function setBrokerList(result) {
 			tr.append('<td class="_center">'+list[i].id+'</td>');
 			tr.append('<td>'+list[i].data.host+'</td>');
 			tr.append('<td>'+list[i].data.port+'</td>');
-			tr.append('<td class="_right">'+list[i].topicCount.toLocaleString()+'</td>');
+			tr.append('<td class="_center">'+list[i].topicCount.toLocaleString()+'</td>');
 			tbody.append(tr);
 			$('#data-tb').append(tbody);
 		}
@@ -234,7 +234,7 @@ function setTopicConsumerList(result) {
 		for(var i = 0; i < len; i++) {
 			tbody = $('<tbody>');
 			tr = $('<tr class="success consumer">');
-			tr.append('<td>'+list[i].consumer+'</td>');
+			tr.append('<td><a href="#" class="chart-link">'+list[i].consumer+'</a></td>');
 			tr.append('<td></td>');
 			tr.append('<td class="_right">'+list[i].offset.toLocaleString()+'</td>');
 			tr.append('<td class="_right">'+list[i].logSize.toLocaleString()+'</td>');
@@ -258,6 +258,12 @@ function setTopicConsumerList(result) {
 			}
 			$('#data-tb').append(tbody);
 		}
+
+		$('.chart-link').on('click', function(e) {
+			e.preventDefault();
+			var url = '/chart/'+result.name+'/'+$(this).text();
+			showChart(url);
+		});
 	} else {
 		$('#data-tb').append('<tbody><tr><td colspan="8" class="_center"><strong>Consumer list not found</strong></td></tr></tbody>');
 	}
@@ -350,7 +356,7 @@ function setConsumerTopicList(result) {
 		for(var i = 0; i < len; i++) {
 			tbody = $('<tbody>');
 			tr = $('<tr class="success topic">');
-			tr.append('<td>'+list[i].topic+'</td>');
+			tr.append('<td><a href="#" class="chart-link">'+list[i].topic+'</a></td>');
 			tr.append('<td></td>');
 			tr.append('<td class="_right">'+list[i].offset.toLocaleString()+'</td>');
 			tr.append('<td class="_right">'+list[i].logSize.toLocaleString()+'</td>');
@@ -372,7 +378,30 @@ function setConsumerTopicList(result) {
 			}
 			$('#data-tb').append(tbody);
 		}
+
+		$('.chart-link').on('click', function(e) {
+			e.preventDefault();
+			var url = '/chart/'+$(this).text()+'/'+result.name;
+			showChart(url);
+		});
+
 	} else {
 		$('#data-tb').append('<tbody><tr><td colspan="7" class="_center">&nbsp;&nbsp;<strong>Topic list not found</strong></td></tr></tbody>');
 	}
+}
+
+function showChart(url) {
+	var popWnd;
+	var status = "toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes";
+	/*
+	 if(self.screen) {
+	 popWnd = window.open(url, '_blank', status);
+	 popWnd.resizeTo(screen.width, screen.height);
+	 popWnd.moveTo(0, 0);
+	 } else {
+	 status += ", fullscreen=yes, resizable=yes";
+	 popWnd = window.open(url, '_blank', status);
+	 }
+	 */
+	popWnd = window.open(url, '_blank', status);
 }
