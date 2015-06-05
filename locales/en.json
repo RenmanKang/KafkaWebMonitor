@@ -1,0 +1,25 @@
+{
+  "title" : "Kafka Web Monitor",
+  "Add" : "Add",
+  "Cancel" : "Cancel",
+  "Search" : "Search",
+  "Refresh" : "Refresh",
+  "Close" : "Close",
+  "Name" : "Name",
+  "Value" : "Value",
+  "Alert" : "Alert",
+  "sec" : "sec",
+  "Log Size" : "Log Size",
+  "Offset" : "Offset",
+  "Lag" : "Lag",
+  "Current Time" : "Current Time",
+  "Process Time" : "Process Time",
+  "Log Increment" : "Log Increment",
+  "Offset Increment" : "Offset Increment",
+
+  "Add Zookeeper Connection" : "Add Zookeeper Connection",
+  "Zookeeper connection string" : "Zookeeper connection string",
+  "Chroot string(optional)" : "Chroot string(optional)",
+  "Zookeeper connection string input required" : "Zookeeper connection string input required",
+  "Change zookeeper connection" : "Change zookeeper connection"
+}

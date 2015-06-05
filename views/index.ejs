@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Kafka Web Monitor</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="stylesheet" href="/lib/bootstrap-3.3.4/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="/lib/bootstrap-table/bootstrap-table.min.css" />
+	<link rel="stylesheet" href="/lib/jstree/themes/proton/style.min.css" />
+	<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="/">Kafka Web Monitor</a>
+		</div>
+	</div>
+</div>
+<div>
+	<div class="affix-top tree" id="tree" style="background-color:#fff;">
+		<div style="margin:6px;"><a href="/zkHosts" title="<%= __('Change zookeeper connection') %>"><%= zkhosts %></a></div>
+		<div style="margin-bottom:4px;">
+			<div class="input-group input-group-sm" style="margin:0 4px 0 0">
+				<input type="text" class="form-control" id="search-node" />
+				<span class="input-group-btn">
+					<button type="button" class="btn btn-info" id="search-btn" title="<%= __('Search') %>">
+						<i class="glyphicon glyphicon-search"></i>
+					</button>
+				</span>
+				<span class="input-group-btn">
+					<button type="button" class="btn btn-info" id="refresh-btn" title="<%= __('Refresh') %>">
+						<i class="glyphicon glyphicon-refresh"></i>
+					</button>
+				</span>
+			</div>
+		</div>
+		<div id="kafkaTree"></div>
+	</div>
+	<div id="content" class= "content sec-index" style="background-color:#fff;">
+		<input type="hidden" id="curr-node" />
+		<div class="well content-title">
+			<span id="content-title"></span>
+			<button type="button" class="btn btn-info btn-xs" id="content-refresh-btn" data-state="refresh" title="<%= __('Refresh') %>">
+				<i class="glyphicon glyphicon-refresh"></i>
+			</button>
+		</div>
+		<div id="alert-div"></div>
+		<table class="table" id="data-tb">
+		</table>
+	</div>
+</div>
+<% include ./modals %>
+<script type="text/javascript" src="/lib/jquery/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="/lib/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/lib/bootstrap-table/bootstrap-table.min.js"></script>
+<script type="text/javascript" src="/lib/moment/moment.js"></script>
+<script type="text/javascript" src="/lib/jstree/jstree.min.js"></script>
+<script type="text/javascript" src="/js/script.js"></script>
+<script type="text/javascript" src="/js/main.js"></script>
+</body>
+</html>
