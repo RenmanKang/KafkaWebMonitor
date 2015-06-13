@@ -11,7 +11,8 @@ var conf = require('./conf/config');
 var i18nConfig = require('./lib/i18n-config');
 var zk_hosts = require('./lib/zk-hosts');
 var kafka = require('./lib/kafka');
-var logger = require('./lib/logger').accessLogger;
+var accessLogger = require('./lib/logger').accessLogger;
+var logger = require('./lib/logger').appLogger;
 
 var app = express();
 
@@ -42,7 +43,7 @@ app.use(session({
 }));
 
 app.use(function(req, res, next) {
-	logger.info([
+	accessLogger.info([
 		req.headers['x-forwarded-for'] || req.client.remoteAddress,
 		req.method,
 		req.url,
@@ -57,21 +58,24 @@ app.use(express.static(path.join(__dirname, 'public'), maxAge));
 var kafkaClient;
 
 var middleware = function(req, res, next) {
-	var id = req.query.id;
-	id && console.log('id:'+id);
+	var id = req.query.id || req.cookies['zk-id'];
 	try {
 		if(kafkaClient) {
 			if(id && zk_hosts.getZkHostsById(id) && id != kafkaClient.getId()) {
-				console.log('Change kafka client '+kafkaClient.getId()+' to '+id);
+				logger.debug('Change kafkaClient. Current id:'+kafkaClient.getId()+', New id:'+id);
 				kafkaClient.close();
 				kafkaClient = new kafka.KafkaClient(id);
+				res.cookie('zk-id', kafkaClient.getId(), { path: '/', httpOnly: true });
 			}
 		} else {
 			kafkaClient = new kafka.KafkaClient(id);
+			res.cookie('zk-id', kafkaClient.getId(), { path: '/', httpOnly: true });
 		}
+
 		req.kafkaClient = kafkaClient;
 	} catch(err) {
 		zk_hosts.loadZkHostsList();
+		logger.error(err);
 		throw err;
 	}
 	next();
