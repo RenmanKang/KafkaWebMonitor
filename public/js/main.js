@@ -1,6 +1,6 @@
 $(function () {
 	loadTree();
-	$(window).bind('resize', resizeApp);
+	setupResizeEvents();
 
 	$('#content-refresh-btn').on('click', function() {
 		var state = $(this).attr('data-state');
@@ -17,7 +17,40 @@ $(function () {
 });
 
 function resizeApp() {
+	var barWidth = $('#kafkaTree').outerWidth(true);
+	$('#content').css('left', barWidth);
 	$('#kafkaTree').height($(window).height() - $('#kafkaTree').offset().top);
+	$('#sidebarResize').css('height', $('#tree').css('height'));
+}
+
+function setupResizeEvents() {
+	var sidebarResizing = false;
+	var sidebarFrame = $("#tree").width();
+
+	$('#kafkaTree').bind('resize', resizeApp);
+	$(window).bind('resize', resizeApp);
+
+	$(document).mouseup(function (event) {
+		sidebarResizing = false;
+		sidebarFrame = $("#tree").width();
+		$('body').removeClass('select-disabled');
+	});
+
+	$("#sidebarResize").mousedown(function (event) {
+		sidebarResizing = event.pageX;
+		$('body').addClass('select-disabled');
+	});
+
+	$(document).mousemove(function (event) {
+		if(sidebarResizing) {
+			var w = sidebarFrame - (sidebarResizing - event.pageX);
+			if(w > 276) {
+				$('#tree, .bootstrap-select').css('width', w-5);
+				$('#tree').width(w);
+				resizeApp();
+			}
+		}
+	});
 }
 
 function loadTree() {
@@ -57,7 +90,6 @@ function reloadTree() {
 var srchTimer = false;
 function searchNode() {
 	var val = $('#search-node').val();
-	console.log('search-node:'+val);
 	if(val) {
 		if(srchTimer) { clearTimeout(srchTimer); }
 		srchTimer = setTimeout(function () {
@@ -71,7 +103,6 @@ function loadContent(node) {
 	if(node && Array.isArray(node)) {
 		node = node[0];
 	}
-	console.log('node;',node);
 	if(contentTimer) { clearTimeout(contentTimer); }
 	$('#content-refresh-btn').attr('disabled', 'disabled');
 	$.get('/api/content?node='+node, function(result) {

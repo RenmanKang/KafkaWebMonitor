@@ -59,7 +59,6 @@ function setEditBtnEvent(elm) {
 	var id = $(elm).attr('data-id');
 	var hosts = $('#'+id).find('.host-td a').text();
 	var chroot = $('#'+id).find('.chroot-td').text();
-	console.log(hosts+','+chroot);
 	$('#'+id).find('.host-td').empty().append('<input type="text" class="form-control input-sm" name="hosts" value="'+hosts+'" />');
 	$('#'+id).find('.chroot-td').empty().append('<input type="text" class="form-control input-sm" name="chroot" value="'+chroot+'" />');
 	$(elm).unbind('click');

@@ -75,7 +75,6 @@ var ChartHnadler = {
 		}
 	}),
 	initCondition: function() {
-		console.log('initCondition');
 		ChartHnadler.isFirst = true;
 		ChartHnadler.chart.load({
 			columns: [
