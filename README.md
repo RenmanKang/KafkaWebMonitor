@@ -8,8 +8,8 @@ Kafka Web Monitor is a node.js application for monitoring [Apache Kafka](http://
 
 ## 2. Prerequisite
 
-- Node.js
-	- [https://nodejs.org/](https://nodejs.org/)
+- Node.js (v0.10.29)
+	- [https://nodejs.org/download/release/v0.10.9](https://nodejs.org/download/release/v0.10.9)
 - npm(JavaScript package manager) 
 	- [https://github.com/npm/npm](https://github.com/npm/npm)
 
