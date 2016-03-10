@@ -25,14 +25,49 @@ cd KafkaWebMonitor
 npm install
 ```
 
-## 4. Running It
+## 4. Setting up
+
+- Change the `port` or `logger filename` path, and other settings.
+
+```sh
+cd KafkaWebMonitor/conf
+vi config.js
+-----
+	port: 9000,
+	locales: ['en', 'ko'],
+	session: {
+		max_age: 1000 * 60 * 60 * 24
+	},
+	// Kafka node caching time. millisecond
+	cache_age: 1000 * 60 * 5,
+	chart_tick_time: 5000,
+	logger: {
+		access: {
+			category: 'access',
+			type: 'dateFile',
+			filename: __dirname+'/../logs/kwm-access.log',
+			pattern: '-yyyy-MM-dd',
+			level: 'DEBUG'
+		},
+		app: {
+			category: 'app',
+			type: 'dateFile',
+			filename: __dirname+'/../logs/kwm-app.log',
+			pattern: '-yyyy-MM-dd',
+			level: 'DEBUG'
+		}
+	}
+-----
+```
+
+## 5. Running It
 
 ```sh
 cd KafkaWebMonitor
 node ./bin/www
 ```
 
-## 5. Screenshot
+## 6. Screenshot
 
 - Kafka Web Monitor main page
 
@@ -52,7 +87,7 @@ node ./bin/www
 
 ***
 
-## 5. Reference
+## 7. Reference
 
 - Kafka Web Console 
 	- [https://github.com/claudemamo/kafka-web-console](https://github.com/claudemamo/kafka-web-console)
