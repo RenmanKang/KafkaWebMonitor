@@ -28,18 +28,12 @@ app.use(cookieParser());
 app.use(i18n.init);
 app.use(i18nConfig.init);
 
-var maxAge = (conf.session && conf.session.max_age) || (1000 * 60 * 60 * 24);
-
 app.use(session({
 	name : 'kwm.sid',
 	secret : 'kafka web monitor!',
 	resave : false,
 	saveUninitialized : false,
-	cookie : {
-		path : '/',
-		httpOnly : true,
-		maxAge : maxAge
-	}
+	cookie : conf.cookie
 }));
 
 app.use(function(req, res, next) {
@@ -53,7 +47,7 @@ app.use(function(req, res, next) {
 	].join('\t'));
 	next();
 });
-app.use(express.static(path.join(__dirname, 'public'), maxAge));
+app.use(express.static(path.join(__dirname, 'public'), conf.static || {maxAge: 1000 * 60 * 60 * 24}));
 
 var kafkaClient;
 

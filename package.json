@@ -1,7 +1,12 @@
 {
   "name": "KafkaWebMonitor",
   "version": "0.0.2",
-  "private": true,
+  "description": "Kafka Web Monitor is a node.js application for monitoring Apache Kafka",
+  "main": "app.js",
+  "author": {
+    "name": "Renman Kang",
+    "email": "bw.renman@gmail.com"
+  },
   "scripts": {
     "start": "node ./bin/www"
   },
